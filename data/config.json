@@ -1,0 +1,46 @@
+{
+	"_id": {
+		"$oid": "5b6c237f9ecdbbc458e527f8"
+	},
+	"mp_link": "https://shopee.co.id",
+	"mp_item_url": "https://shopee.co.id/{name}-i.{shopid}.{itemid}",
+	"rule_item_link": "name,shopid,itemid",
+	"mp_sessions_url": "https://shopee.co.id/api/v2/flash_sale/get_all_sessions",
+	"rule_items_list": "data|items[]",
+	"rule_item_start_time": "start_time",
+	"rule_sessions_list": "data|sessions[]|promotionid",
+	"rule_item_price_after": "price",
+	"rule_item_price_before": "price_before_discount",
+	"mp_name": "shopee",
+	"rule_item_id": "itemid",
+	"mp_item_image_url": "https://cf.shopee.co.id/file/{image}",
+	"rule_item_end_time": "end_time",
+	"rule_type": "json",
+	"rule_item_name": "name",
+	"mp_item_index_url": "https://shopee.co.id/api/v2/flash_sale/get_items?offset={offset}\u0026limit={limit}\u0026promotionid={id}",
+	"rule_item_discount": "raw_discount",
+	"rule_item_picture": "promo_images[]"
+}
+{
+	"_id": {
+		"$oid": "5b6c237f9ecdbbc458e527f9"
+	},
+	"mp_link": "https://www.bukalapak.com",
+	"mp_item_url": null,
+	"rule_item_link": "url",
+	"mp_sessions_url": "https://api.bukalapak.com/v2/flash_deal.json",
+	"rule_items_list": "flash_deal|items[]",
+	"rule_item_start_time": "start_date",
+	"rule_sessions_list": "flash_deal|id,other_flash_deal[]|id",
+	"rule_item_price_after": "discount_price",
+	"rule_item_price_before": "original_price",
+	"mp_name": "bukalapak",
+	"rule_item_id": "id",
+	"mp_item_image_url": null,
+	"rule_item_end_time": "end_date",
+	"rule_type": "json",
+	"rule_item_name": "name",
+	"mp_item_index_url": "https://api.bukalapak.com/v2/flash_deal/{id}.json",
+	"rule_item_discount": "percentage",
+	"rule_item_picture": "images[]"
+}
