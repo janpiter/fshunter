@@ -8,7 +8,7 @@ Flash Sale Crawler for Indonesia Marketplace.
     ```
     $ mongoimport --db <YOUR_DATABASE_NAME> --collection <YOUR_COLLECTION_NAME> --file data/config.json 
     ```
-    ([Read more about importing data in mongodb](https://docs.mongodb.com/manual/reference/program/mongoimport/)).
+    (<a href="https://docs.mongodb.com/manual/reference/program/mongoimport" target="_blank">Read more about importing data in mongodb</a>).
 
 2. Install required libraries using pip:
     ```
