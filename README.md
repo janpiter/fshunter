@@ -21,7 +21,7 @@ Flash Sale Crawler for Indonesia Marketplace.
     host = <YOUR_MONGODB_HOST>
     port = <YOUR_MONGODB_PORT>
     database = <YOUR_DATABASE_NAME>
-    collection = <YOUR_DATABASE_NAME>
+    collection = <YOUR_COLLECTION_NAME>
     ```
  
 ## Usage
