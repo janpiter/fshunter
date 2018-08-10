@@ -1,10 +1,7 @@
-beanstalkc==0.4.0
 beautifulsoup4==4.6.0
-lxml==4.1.1
 mechanize
 pymongo
-raven==6.4.0
-regex==2018.2.21
-requests==2.11.1
-urllib3==1.22
+python-dateutil
+raven==6.9.0
+termcolor
 xlsxwriter

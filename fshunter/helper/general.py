@@ -1,27 +1,46 @@
 import re
+import bs4
 import json
 import string
 import datetime
-
+from dateutil.parser import parse
 
 URL_PATTERN = re.compile(r'^https?://', flags=re.I)
+NOT_DIGIT_PATTERN = re.compile(r'\D')
 
 
-def validate(data):
+def validate(data, data_type=None):
     """
     Validate value if json or dict,
     if value is json then convert it into dict.
     :param data: json or dict
+    :param data_type: data type
     :return: dict
     """
     try:
-        if isinstance(data, dict):
-            return data
-        else:
-            # noinspection PyBroadException
-            try:
-                return json.loads(data)
-            except ValueError:
+        if data_type == dict:
+            if isinstance(data, data_type):
+                return data
+            else:
+                # noinspection PyBroadException
+                try:
+                    return json.loads(data)
+                except ValueError:
+                    return data
+        elif data_type == long:
+            if isinstance(data, data_type):
+                return data
+            else:
+                # noinspection PyBroadException
+                try:
+                    data = NOT_DIGIT_PATTERN.sub('', str(data))
+                    return long(data)
+                except ValueError:
+                    return data
+        elif data_type == bs4.element.Tag:
+            if isinstance(data, bs4.element.Tag):
+                return data.get_text()
+            else:
                 return data
     except Exception:
         raise
@@ -101,6 +120,8 @@ def date_formatter(raw_date, date_format="%Y-%m-%dT%H:%M:%S.000+07:00"):
             result = datetime.datetime\
                 .fromtimestamp(float(raw_date))\
                 .strftime(date_format)
+        else:
+            result = parse(raw_date).strftime(date_format)
     except Exception:
         raise
     finally:

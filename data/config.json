@@ -44,3 +44,26 @@
 	"rule_item_discount": "percentage",
 	"rule_item_picture": "images[]"
 }
+{
+	"_id": {
+		"$oid": "5b6d3c273a3f60cfca8f4936"
+	},
+	"mp_link": "https://www.tokopedia.com",
+	"mp_item_url": null,
+	"rule_item_link": "a|href",
+	"mp_sessions_url": "https://www.tokopedia.com/discovery/flash-sale",
+	"rule_items_list": "div[id^=product_id_]",
+	"rule_item_start_time": "#sprintsale-counter|data-start-date",
+	"rule_sessions_list": ".product_card_sprint_sale_component_container|data-product-card-component-id",
+	"rule_item_price_after": ".price-after",
+	"rule_item_price_before": ".price-before",
+	"mp_name": "tokopedia",
+	"rule_item_id": ".product-card|product-index",
+	"mp_item_image_url": null,
+	"rule_item_end_time": "#sprintsale-counter|data-end-date",
+	"rule_type": "css",
+	"rule_item_name": "h1",
+	"mp_item_index_url": "https://ace.tokopedia.com/hoth/discovery/render/component/desktop/flash-sale/{id}?rpc_Page={offset}\u0026rpc_ResultPerPage={limit}",
+	"rule_item_discount": ".discount",
+	"rule_item_picture": "img|src"
+}

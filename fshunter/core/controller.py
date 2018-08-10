@@ -94,7 +94,7 @@ class Controller:
     def get_sessions(self):
         """
 
-        :return:
+        :return: tuple (list of dict, html response)
         """
         try:
             rule_type = self.mp['rule_type']
@@ -104,7 +104,9 @@ class Controller:
             req = Request(method='urllib')
             response = req.open(rule_sessions_link)
 
-            return self.parse(rule_type=rule_type, data=response, rules=rules)
+            return self.parse(rule_type=rule_type,
+                              data=response,
+                              rules=rules), response
         except Exception:
             raise
 

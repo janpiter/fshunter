@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 import re
+from bs4 import BeautifulSoup
+
 from fshunter.helper.general import validate, flatten_dict
+from fshunter.helper.logger import logger
 
 IS_ARRAY = re.compile(r'\[\]')
 
@@ -10,9 +14,9 @@ class RuleParser:
         self.extract_values = []
         self.items = []
         self.type = web_type
+        self.bs = None
 
-    @staticmethod
-    def json_parser(rule, data):
+    def json_parser(self, rule, data):
         """
 
         :param rule:
@@ -21,8 +25,27 @@ class RuleParser:
         """
         try:
             return data[rule]
-        except Exception:
-            raise
+        except KeyError as e:
+            logger('{}: KeyError: {}'.format(self.__class__.__name__, str(e)),
+                   color='yellow')
+            return dict()
+
+    def html_parser(self, rule, attr=None):
+        """
+        :param rule:
+        :param attr:
+        :return:
+        """
+        try:
+            if attr:
+                return self.bs.select_one(rule)[attr]
+            else:
+                return self.bs.select(rule)
+        except Exception as e:
+            logger('{}: {} ({}:{})'.format(self.__class__.__name__, str(e),
+                                           rule, attr),
+                   color='yellow')
+            return None
 
     def rule_parser(self, rules, data):
         """
@@ -32,13 +55,19 @@ class RuleParser:
         :return:
         """
         rules = [r for r in rules.split('|')]
-        for i, r in enumerate(rules):
-            r = IS_ARRAY.sub("", r)
-            if isinstance(data, list):
-                data = [self.json_parser(r, d) for d in data]
-            else:
-                data = self.json_parser(r, data)
-        return data
+        if self.type == 'json':
+            for i, r in enumerate(rules):
+                r = IS_ARRAY.sub("", r)
+                if isinstance(data, list):
+                    data = [self.json_parser(r, d) for d in data]
+                else:
+                    data = self.json_parser(r, data)
+            return data
+        elif self.type == 'css':
+            selector, attribute = list(rules) \
+                                      if len(rules) > 1 else (rules[0], None)
+            data = self.html_parser(rule=selector, attr=attribute)
+            return data
 
     def extract(self, rule, data, flattening=True):
         """
@@ -49,10 +78,17 @@ class RuleParser:
         :return: dict
         """
         if self.type == 'json':
-            data = validate(data)
-            for r in rule.split(','):
-                self.result = self.rule_parser(r, data)
-                self.extract_values.append({r: self.result})
+            data = validate(data, data_type=dict)
+        elif self.type == 'css':
+            if isinstance(data, str):
+                self.bs = BeautifulSoup(data, 'html.parser')
+            else:
+                self.bs = data
+
+        for r in rule.split(','):
+            self.result = self.rule_parser(r, data)
+            self.extract_values.append({r: self.result})
+
         if flattening:
             self.items = flatten_dict(self.extract_values)
         else:

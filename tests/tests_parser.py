@@ -20,8 +20,8 @@ def get_marketplace():
 def test_parser(mp_name=None):
     try:
         ct = Controller(mp_name=mp_name)
-        ses = ct.get_sessions()
-        print ses
+        ses, html = ct.get_sessions()
+        print ses, html
     except Exception as e:
         print str(e)
 

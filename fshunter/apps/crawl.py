@@ -4,8 +4,11 @@ from argparse import ArgumentParser
 
 from fshunter.core.controller import Controller
 from fshunter.core.output import Export
+from fshunter.core.publisher import Nsq
+from fshunter.helper.logger import logger
 from fshunter.helper.general import get_arguments, list_to_dict, \
-    date_formatter, remove_whitespace, valid_url
+    date_formatter, remove_whitespace
+from fshunter.apps.formatter import Formatter
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -24,21 +27,41 @@ def get_marketplace():
     return marketplace_list
 
 
-def run(mp_name=None, output=None, file_path=None, file_name=None):
+def run(mp_name=None, output=None, file_path=None, file_name=None,
+        publish=None, debug=None):
     """
     :param mp_name: market place name
     :param output: type of file for output
     :param file_path: file path
     :param file_name: file name
+    :param publish: publish data to NSQ
+    :param debug:
     :return: list of dict
     """
     try:
-        ct = Controller(mp_name=mp_name)
-        ses = ct.get_sessions()
-        items_url = ct.mp['mp_item_index_url']
-        arguments = list_to_dict(get_arguments(items_url))
-        marketplace = ct.mp
         shop_items = []
+        start_time = end_time = None
+
+        ct = Controller(mp_name=mp_name)
+        ses, html = ct.get_sessions()
+        marketplace = ct.mp
+
+        items_url = marketplace['mp_item_index_url']
+        arguments = list_to_dict(get_arguments(items_url))
+
+        raw_start_time = ct.parse(rule_type=marketplace['rule_type'],
+                                  data=html,
+                                  rules=marketplace['rule_item_start_time'],
+                                  flattening=False)
+        if raw_start_time:
+            start_time = next(iter(raw_start_time)).values()[0]
+
+        raw_end_time = ct.parse(rule_type=marketplace['rule_type'],
+                                data=html,
+                                rules=marketplace['rule_item_end_time'],
+                                flattening=False)
+        if raw_end_time:
+            end_time = next(iter(raw_end_time)).values()[0]
 
         for s in ses[next(iter(ses))]:
             arguments['id'] = s
@@ -46,53 +69,47 @@ def run(mp_name=None, output=None, file_path=None, file_name=None):
             items = ct.get_items(target_url)
 
             for item in items[next(iter(items))]:
-
                 shop_item = dict()
                 template = ct.item_template()
-                for t_key, t_value in template.iteritems():
+                shop_item['marketplace'] = mp_name
 
-                    value = ct.parse(data=item, rules=ct.mp[t_value['rule']],
+                for t_key, t_value in template.iteritems():
+                    value = ct.parse(rule_type=marketplace['rule_type'],
+                                     data=item,
+                                     rules=marketplace[t_value['rule']],
                                      flattening=False)
+
+                    ft = Formatter(value)
 
                     if len(value):
                         if len(value) > 1:
                             if t_key == 'url':
-                                value = dict(pair for d in value
-                                             for pair in d.items())
-                                value = ct.fill_arguments(
-                                    marketplace['mp_item_url'],
-                                    value)
+                                value = ft.format_item_url(mp=marketplace,
+                                                           ct=ct)
                         else:
                             raw_value = value[0]
                             value = raw_value[next(iter(raw_value))]
                             if t_key == 'image':
-                                value = value[0]
-                                if not valid_url(value):
-                                    if marketplace['mp_item_image_url']:
-                                        value = ct.fill_arguments(
-                                            marketplace['mp_item_image_url'],
-                                            {
-                                                t_key: value[0] if
-                                                isinstance(value, list)
-                                                else value
-                                            }
-                                        )
+                                value = ft.format_image_url(key=t_key,
+                                                            mp=marketplace,
+                                                            ct=ct)
                             else:
                                 if t_key in ['start_time', 'end_time']:
                                     value = date_formatter(value)
-                                elif t_key in ['price_before', 'price_after']:
-                                    if value:
-                                        value = value // 100000 \
-                                            if value > 9999999 else value
-                                    else:
-                                        value = 0
+                                elif t_key in ['price_before', 'price_after',
+                                               'discount']:
+                                    value = ft.format_number()
                                 else:
-                                    value = value[0] \
-                                        if isinstance(value, list) else value
+                                    value = ft.item
 
                         shop_item[t_key] = remove_whitespace(value)
 
-                shop_item['marketplace'] = mp_name
+                if shop_item['start_time'] is None:
+                    shop_item['start_time'] = date_formatter(start_time)
+
+                if shop_item['end_time'] is None:
+                    shop_item['end_time'] = date_formatter(end_time)
+
                 shop_items.append(shop_item)
 
         if output:
@@ -102,10 +119,16 @@ def run(mp_name=None, output=None, file_path=None, file_name=None):
                               output_format=output, file_name=file_name).save
             else:
                 raise Exception('File path required')
+
+        if publish:
+            nsq = Nsq(debug=debug)
+            for item in shop_items:
+                nsq.publish(item)
+
         return shop_items
 
     except Exception as e:
-        print e
+        logger(str(e), level='error')
 
 
 if __name__ == '__main__':
@@ -121,19 +144,30 @@ if __name__ == '__main__':
                         choices=output_choices,
                         help='Type of file for output (csv, json, xls, xlsx).')
     parser.add_argument('--file_path',
-                        help='File path (default: /tmp).',
+                        help='Output file path (default: /tmp).',
                         default='/tmp')
     parser.add_argument('--file_name',
-                        help='File name (default: marketplace name).')
+                        help='Output file name (default: marketplace name).')
+    parser.add_argument('--publish',
+                        choices=['True', 'False'],
+                        default='False',
+                        help='Publish data to NSQ.')
+    parser.add_argument('--debug',
+                        choices=['True', 'False'],
+                        default='False',
+                        help='.')
 
     args = parser.parse_args()
     _marketplace = args.marketplace
     _output = args.output
     _file_path = args.file_path
     _file_name = args.file_name
+    _publish = eval(args.publish)
+    _debug = eval(args.debug)
 
     if _marketplace:
         run(mp_name=_marketplace, output=_output,
-            file_path=_file_path, file_name=_file_name)
+            file_path=_file_path, file_name=_file_name,
+            publish=_publish, debug=_debug)
     else:
         parser.print_help()
