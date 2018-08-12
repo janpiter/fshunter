@@ -3,12 +3,12 @@ import sys
 from argparse import ArgumentParser
 
 from fshunter.core.controller import Controller
-from fshunter.core.output import Export
+from fshunter.core.formatter import Formatter
+from fshunter.core.exporter import Export
 from fshunter.core.publisher import Nsq
 from fshunter.helper.logger import logger
 from fshunter.helper.general import get_arguments, list_to_dict, \
     date_formatter, remove_whitespace
-from fshunter.apps.formatter import Formatter
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -43,29 +43,32 @@ def run(mp_name=None, output=None, file_path=None, file_name=None,
         start_time = end_time = None
 
         ct = Controller(mp_name=mp_name)
-        ses, html = ct.get_sessions()
         marketplace = ct.mp
 
+        session_arguments = list_to_dict(
+            get_arguments(marketplace['mp_sessions_url']))
+        ses, html = ct.get_sessions(arguments=session_arguments)
+
         items_url = marketplace['mp_item_index_url']
-        arguments = list_to_dict(get_arguments(items_url))
+        items_arguments = list_to_dict(get_arguments(items_url))
 
-        raw_start_time = ct.parse(rule_type=marketplace['rule_type'],
-                                  data=html,
-                                  rules=marketplace['rule_item_start_time'],
-                                  flattening=False)
-        if raw_start_time:
-            start_time = next(iter(raw_start_time)).values()[0]
-
-        raw_end_time = ct.parse(rule_type=marketplace['rule_type'],
-                                data=html,
-                                rules=marketplace['rule_item_end_time'],
-                                flattening=False)
-        if raw_end_time:
-            end_time = next(iter(raw_end_time)).values()[0]
+        # Get start & end flash sale date from index page
+        if marketplace['period_source'] == 'root':
+            ft = Formatter(data=html)
+            start_time = ft.format_date(
+                key='start_time',
+                rules=marketplace['rule_item_start_time'],
+                mp=marketplace,
+                ct=ct)
+            end_time = ft.format_date(
+                key='end_time',
+                rules=marketplace['rule_item_end_time'],
+                mp=marketplace,
+                ct=ct)
 
         for s in ses[next(iter(ses))]:
-            arguments['id'] = s
-            target_url = ct.fill_arguments(items_url, arguments)
+            items_arguments['id'] = s
+            target_url = ct.fill_arguments(items_url, items_arguments)
             items = ct.get_items(target_url)
 
             for item in items[next(iter(items))]:
@@ -78,14 +81,11 @@ def run(mp_name=None, output=None, file_path=None, file_name=None,
                                      data=item,
                                      rules=marketplace[t_value['rule']],
                                      flattening=False)
-
-                    ft = Formatter(value)
-
                     if len(value):
-                        if len(value) > 1:
-                            if t_key == 'url':
-                                value = ft.format_item_url(mp=marketplace,
-                                                           ct=ct)
+                        ft = Formatter(value)
+
+                        if len(value) > 1 and t_key == 'url':
+                            value = ft.format_item_url(mp=marketplace, ct=ct)
                         else:
                             raw_value = value[0]
                             value = raw_value[next(iter(raw_value))]
@@ -98,16 +98,20 @@ def run(mp_name=None, output=None, file_path=None, file_name=None,
                                     value = date_formatter(value)
                                 elif t_key in ['price_before', 'price_after',
                                                'discount']:
-                                    value = ft.format_number()
+                                    value = ft.format_number(key=t_key,
+                                                             mp=marketplace)
                                 else:
                                     value = ft.item
 
+                        if t_key in ['image', 'url']:
+                            value = ft.build_url(value, mp=marketplace)
+
                         shop_item[t_key] = remove_whitespace(value)
 
-                if shop_item['start_time'] is None:
+                if not shop_item['start_time']:
                     shop_item['start_time'] = date_formatter(start_time)
 
-                if shop_item['end_time'] is None:
+                if not shop_item['end_time']:
                     shop_item['end_time'] = date_formatter(end_time)
 
                 shop_items.append(shop_item)
@@ -154,8 +158,7 @@ if __name__ == '__main__':
                         help='Publish data to NSQ.')
     parser.add_argument('--debug',
                         choices=['True', 'False'],
-                        default='False',
-                        help='.')
+                        default='False')
 
     args = parser.parse_args()
     _marketplace = args.marketplace

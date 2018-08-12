@@ -36,7 +36,7 @@ Flash Sale Crawler for Indonesia Marketplace.
     
 ## Usage
 ```
-usage: crawl.py [-h] --marketplace {shopee,bukalapak,tokopedia}
+usage: crawl.py [-h] --marketplace {shopee,bukalapak,tokopedia,jd.id,elevenia}
                 [--output {csv,json,xls,xlsx}] [--file_path FILE_PATH]
                 [--file_name FILE_NAME] [--publish {True,False}]
                 [--debug {True,False}]
@@ -45,7 +45,7 @@ Marketplace flash sale crawler.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --marketplace {shopee,bukalapak,tokopedia}
+  --marketplace {shopee,bukalapak,tokopedia,jd.id,elevenia}
                         Marketplace name.
   --output {csv,json,xls,xlsx}
                         Type of file for output (csv, json, xls, xlsx).

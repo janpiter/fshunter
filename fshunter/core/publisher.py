@@ -1,6 +1,6 @@
 import json
 
-from fshunter.core.config import load
+from fshunter.helper.config import load
 from fshunter.helper.nsq import Producer
 from fshunter.helper.logger import logger
 

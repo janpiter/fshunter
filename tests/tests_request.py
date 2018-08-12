@@ -3,7 +3,6 @@ import sys
 from argparse import ArgumentParser
 
 from fshunter.core.http import Request
-from fshunter.core.controller import Controller
 
 reload(sys)
 sys.setdefaultencoding('utf8')

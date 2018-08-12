@@ -3,14 +3,19 @@ import csv
 import json
 import xlsxwriter
 
+from fshunter.helper.general import current_timestamp, date_formatter
+
 
 class Export:
     def __init__(self, output_format=None, data=None, file_path=None,
                  file_name=None):
         self.data = data
         self.output_format = output_format
-        self.file_path = file_path
-        self.file_name = file_name
+        self.file_path = file_path.rstrip('/')
+        self.file_name = '{}-{}'.format(
+            date_formatter(current_timestamp(milliseconds=False),
+                           date_format="%Y.%m.%d.%H"),
+            file_name)
         self.save = self.put()
 
     def _to_csv(self):
@@ -21,7 +26,7 @@ class Export:
         try:
             keys = self.data[0].keys()
             with open('{}/{}.{}'.format(
-                    self.file_path.rstrip('/'),
+                    self.file_path,
                     self.file_name,
                     self.output_format), 'wb') as output_file:
                 dict_writer = csv.DictWriter(output_file, keys)
@@ -37,7 +42,7 @@ class Export:
         """
         try:
             with open('{}/{}.{}'.format(
-                    self.file_path.rstrip('/'),
+                    self.file_path,
                     self.file_name,
                     self.output_format), 'wb') as output_file:
                 json.dump(self.data, output_file)
@@ -51,7 +56,7 @@ class Export:
         """
         try:
             workbook = xlsxwriter.Workbook('{}/{}.{}'.format(
-                self.file_path.rstrip('/'),
+                self.file_path,
                 self.file_name,
                 self.output_format))
             worksheet = workbook.add_worksheet()

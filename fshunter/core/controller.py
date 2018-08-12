@@ -2,6 +2,7 @@
 from fshunter.core.model import Model
 from fshunter.core.parser import RuleParser
 from fshunter.core.http import Request
+from fshunter.helper.general import current_timestamp
 
 
 class Controller:
@@ -40,7 +41,6 @@ class Controller:
     @staticmethod
     def parse(rule_type='json', data=None, rules=None, flattening=True):
         """
-
         :param flattening:
         :param rule_type:
         :param data:
@@ -57,7 +57,6 @@ class Controller:
     @staticmethod
     def fill_arguments(url, arguments, offset=0, limit=100):
         """
-
         :param url:
         :param arguments:
         :param offset:
@@ -70,6 +69,8 @@ class Controller:
                     arguments[key] = limit
                 if key == 'offset':
                     arguments[key] = offset
+                if key == 'timestamp':
+                    arguments[key] = current_timestamp()
             return url.format(**arguments)
         except Exception:
             raise
@@ -91,18 +92,20 @@ class Controller:
         except Exception:
             raise
 
-    def get_sessions(self):
+    def get_sessions(self, arguments=None):
         """
-
         :return: tuple (list of dict, html response)
         """
         try:
             rule_type = self.mp['rule_type']
-            rule_sessions_link = self.mp['mp_sessions_url']
+            sessions_link = self.mp['mp_sessions_url']
             rules = self.mp['rule_sessions_list']
 
+            if arguments:
+                sessions_link = self.fill_arguments(sessions_link, arguments)
+
             req = Request(method='urllib')
-            response = req.open(rule_sessions_link)
+            response = req.open(sessions_link)
 
             return self.parse(rule_type=rule_type,
                               data=response,
@@ -112,7 +115,6 @@ class Controller:
 
     def get_items(self, request_url):
         """
-
         :param request_url:
         :return:
         """

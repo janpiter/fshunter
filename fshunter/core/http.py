@@ -31,9 +31,12 @@ class Request:
         :param url:
         :return:
         """
-        browser = mechanize.Browser()
-        response = browser.open(url).read()
-        return response
+        try:
+            browser = mechanize.Browser()
+            response = browser.open(url, timeout=10).read()
+            return response
+        except mechanize.URLError:
+            raise
 
     def _urllib(self, url):
         """
@@ -41,10 +44,13 @@ class Request:
         :param url:
         :return:
         """
-        request = urllib2.Request(url,
-                                  headers=self.request_headers)
-        response = urllib2.urlopen(request).read()
-        return response
+        try:
+            request = urllib2.Request(url,
+                                      headers=self.request_headers)
+            response = urllib2.urlopen(request, timeout=10).read()
+            return response
+        except urllib2.URLError:
+            raise
 
     def open(self, url):
         """

@@ -1,6 +1,6 @@
 from pymongo import MongoClient, ASCENDING, DESCENDING
 
-from fshunter.core.config import load
+from fshunter.helper.config import load
 
 
 class Model:

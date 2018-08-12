@@ -1,21 +1,49 @@
-import re
-import bs4
-import json
-import string
 import datetime
+import json
+import re
+import string
+import time
+
 from dateutil.parser import parse
 
 URL_PATTERN = re.compile(r'^https?://', flags=re.I)
 NOT_DIGIT_PATTERN = re.compile(r'\D')
 
 
+def current_timestamp(milliseconds=True):
+    """
+    :param milliseconds:
+    :return:
+    """
+    return int(round(time.time() * 1000)) \
+        if milliseconds else int(time.time())
+
+
+def date_formatter(raw_date, date_format="%Y-%m-%dT%H:%M:%S.000+07:00"):
+    """
+    Convert unix timestamp to readable date and time.
+    :param raw_date: Unix timestamp
+    :param date_format: datetime format
+    :return: str
+    """
+    result = raw_date
+    try:
+        if isinstance(raw_date, int):
+            result = datetime.datetime.fromtimestamp(float(raw_date))
+        else:
+            result = parse(raw_date)
+        result = result.strftime(date_format)
+    except Exception:
+        raise
+    finally:
+        return result
+
+
 def validate(data, data_type=None):
     """
-    Validate value if json or dict,
-    if value is json then convert it into dict.
-    :param data: json or dict
-    :param data_type: data type
-    :return: dict
+    :param data:
+    :param data_type:
+    :return:
     """
     try:
         if data_type == dict:
@@ -37,62 +65,56 @@ def validate(data, data_type=None):
                     return long(data)
                 except ValueError:
                     return data
-        elif data_type == bs4.element.Tag:
-            if isinstance(data, bs4.element.Tag):
-                return data.get_text()
-            else:
-                return data
+        elif data_type == 'url':
+            if URL_PATTERN.search(str(data)):
+                return True
+            return False
     except Exception:
         raise
 
 
-def flatten_list(items):
+def flatten(items, items_type=list):
     """
-    Flattening list of list into list.
-    :param items: list of list (example: [1407, [1397, 1402, 1412, 1417]])
-    :return: list
-    """
-    flat_list = []
-    for sublist in items:
-        if isinstance(sublist, list):
-            for item in sublist:
-                flat_list.append(item)
-        else:
-            flat_list.append(sublist)
-    return flat_list
+    Flattening list of dict into single key dict or
+    list of list into single list.
 
+    example:
+        input:
+            [{u'flash_deal|id': 1437},
+             {u'other_flash_deal[]|id': [1417, 1422, 1442, 1447]}
+        output:
+            {u'flash_deal|id,other_flash_deal[]|id':
+             [1437, 1417, 1422, 1442, 1447]}
 
-def flatten_dict(items):
-    """
-    Flattening list of dict into single key dict.
-    :param items: list of dict (example: [{u'flash_deal|id': 1437},
-    {u'other_flash_deal[]|id': [1417, 1422, 1442, 1447]}])
-    :return: dict
+        input:
+            [1407, [1397, 1402, 1412, 1417]]
+        output:
+            [1407, 1397, 1402, 1412, 1417]
+
+    :param items: list or dict
+    :param items_type: list or dict
+    :return:
     """
     flat_list = []
     flat_dict = dict()
-
-    all_keys = set().union(*(d.keys() for d in items))
-
-    for d in items:
-        flat_list.extend(flatten_list(d.values()))
-
-    flat_dict[",".join(list(all_keys))] = flat_list
-
-    return flat_dict
-
-
-def get_arguments(value):
-    """
-    Checking arguments inside string.
-    :param value: string
-    :return: list of arguments
-    """
     try:
-        return [tup[1] for tup in string.Formatter().parse(value)
-                if tup[1] is not None]
-    except TypeError:
+        if items_type == list:
+            for sublist in items:
+                if isinstance(sublist, list):
+                    for item in sublist:
+                        if item:
+                            flat_list.append(item)
+                else:
+                    flat_list.append(sublist)
+        elif items_type == dict:
+            dict_keys = set().union(*(d.keys() for d in items))
+            for d in items:
+                flat_list.extend(flatten(d.values(), items_type=list))
+            flat_dict[",".join(list(dict_keys))] = flat_list
+    except Exception:
         raise
+    finally:
+        return flat_list if items_type == list else flat_dict
 
 
 def list_to_dict(data):
@@ -107,50 +129,34 @@ def list_to_dict(data):
         raise
 
 
-def date_formatter(raw_date, date_format="%Y-%m-%dT%H:%M:%S.000+07:00"):
+def get_arguments(data):
     """
-    Convert unix timestamp to readable date and time.
-    :param raw_date: Unix timestamp
-    :param date_format: datetime format
-    :return: datetime
+    Checking arguments inside string.
+    :param data: string
+    :return: list of arguments
     """
-    result = raw_date
     try:
-        if isinstance(raw_date, int):
-            result = datetime.datetime\
-                .fromtimestamp(float(raw_date))\
-                .strftime(date_format)
-        else:
-            result = parse(raw_date).strftime(date_format)
-    except Exception:
+        return [tup[1] for tup in string.Formatter().parse(data)
+                if tup[1] is not None]
+    except TypeError:
         raise
-    finally:
-        return result
 
 
-def remove_whitespace(value):
+def remove_whitespace(data):
     """
     Remove whitespace.
-    :param value: string
+    :param data: string
     :return: string
     """
     try:
-        value = value.strip()
+        data = data\
+            .replace("\r", "")\
+            .replace("\t", "")\
+            .replace("\n", "")\
+            .replace("\f", "")\
+            .replace("\v", "")\
+            .strip()
     except TypeError:
         raise
     finally:
-        return value
-
-
-def valid_url(url):
-    """
-    Validating url.
-    :param url: string
-    :return: boolean
-    """
-    try:
-        if URL_PATTERN.search(str(url)):
-            return True
-        return False
-    except Exception:
-        raise
+        return data

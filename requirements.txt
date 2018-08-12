@@ -3,5 +3,5 @@ mechanize
 pymongo
 python-dateutil
 raven==6.9.0
-termcolor
+requests
 xlsxwriter
