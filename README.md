@@ -32,7 +32,7 @@ Flash Sale Crawler for Indonesia Marketplace.
     http_port = <YOUR_NSQ_HTTP_PORT>
     topic_items = <YOUR_NSQ_TOPIC_NAME>
     ```
-    (Read more about [Sentry](https://sentry.io/welcome "Sentry | Error Tracking Software") and [NSQ](https://nsq.io "NSQ - A realtime distributed messaging platform")).
+    (Read more about [Sentry](https://docs.sentry.io "Sentry Documentation") and [NSQ](https://nsq.io "NSQ - A realtime distributed messaging platform")).
     
 ## Usage
 ```
