@@ -4,7 +4,7 @@
 Flash Sale Crawler for Indonesia Marketplace.
 
 ## Installation
-1. Import `config.json` file under **data** directory into mongodb:
+1. Import `config.json` file under **data** directory into MongoDB:
     ```
     $ mongoimport --db <YOUR_DATABASE_NAME> --collection <YOUR_COLLECTION_NAME> --file data/config.json 
     ```
@@ -60,5 +60,5 @@ optional arguments:
 
 #### Example usage:
 ```
-$ python2.7 -m fshunter.apps.crawl --marketplace bukalapak --output csv --file_path ~/Desktop --debug True
+$ python2.7 -m fshunter.apps.crawl --marketplace bukalapak --output csv --file_path ~/Desktop
 ```
