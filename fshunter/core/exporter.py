@@ -45,7 +45,7 @@ class Export:
                     self.file_path,
                     self.file_name,
                     self.output_format), 'wb') as output_file:
-                json.dump(self.data, output_file)
+                json.dump(self.data, output_file, indent=4, sort_keys=True)
         except Exception:
             raise
 

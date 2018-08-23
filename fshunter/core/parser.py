@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from fshunter.helper.general import validate, flatten, remove_whitespace
 from fshunter.helper.logger import logger
 
-IS_ARRAY = re.compile(r'\[\]')
+IS_ARRAY = re.compile(r'([^\[]+)\[([^\]]+)?\]')
 
 
 class RuleParser:
@@ -23,7 +23,18 @@ class RuleParser:
         :return:
         """
         try:
-            return data[rule]
+            item_index = None
+            match = IS_ARRAY.search(rule)
+            if match:
+                rule = match.group(1)
+                if match.group(2):
+                    item_index = match.group(2)
+
+            result = data[rule]
+            if isinstance(result, list) and item_index:
+                result = result[int(item_index)]
+
+            return result
         except KeyError as e:
             logger('{}: KeyError: {}'.format(self.__class__.__name__, str(e)))
             return dict()
@@ -53,7 +64,6 @@ class RuleParser:
         rules = [r for r in rules.split('|')]
         if self.type == 'json':
             for i, r in enumerate(rules):
-                r = IS_ARRAY.sub("", r)
                 if isinstance(data, list):
                     data = [self.json_parser(r, d) for d in data
                             if self.json_parser(r, d)]

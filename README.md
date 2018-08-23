@@ -36,29 +36,31 @@ Flash Sale Crawler for Indonesia Marketplace.
     
 ## Usage
 ```
-usage: crawl.py [-h] --marketplace {shopee,bukalapak,tokopedia,jd.id,elevenia}
-                [--output {csv,json,xls,xlsx}] [--file_path FILE_PATH]
+usage: crawl.py [-h] [--output {csv,json,xls,xlsx}] [--file_path FILE_PATH]
                 [--file_name FILE_NAME] [--publish {True,False}]
                 [--debug {True,False}]
+                marketplace
 
-Marketplace flash sale crawler.
+Marketplace flash sale crawler
+
+positional arguments:
+  marketplace           Marketplace name (shopee, bukalapak, tokopedia, jd.id,
+                        elevenia)
 
 optional arguments:
   -h, --help            show this help message and exit
-  --marketplace {shopee,bukalapak,tokopedia,jd.id,elevenia}
-                        Marketplace name.
   --output {csv,json,xls,xlsx}
-                        Type of file for output (csv, json, xls, xlsx).
+                        Type of file for output (csv, json, xls, xlsx)
   --file_path FILE_PATH
-                        Output file path (default: /tmp).
+                        Output file path (default: /tmp)
   --file_name FILE_NAME
-                        Output file name (default: marketplace name).
+                        Output file name (default: Y.m.d.H-marketplace_name)
   --publish {True,False}
-                        Publish data to NSQ.
+                        Publish data to NSQ
   --debug {True,False}
 ```
 
 #### Example usage:
 ```
-$ python2.7 -m fshunter.apps.crawl --marketplace bukalapak --output csv --file_path ~/Desktop
+$ python2.7 -m fshunter.apps.crawl elevenia --output csv --file_path ~/Desktop
 ```
