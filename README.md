@@ -6,7 +6,7 @@ Flash Sale Crawler for Indonesia Marketplace.
 ## Installation
 1. Import `config.json` file under **data** directory into MongoDB:
     ```
-    $ mongoimport --db <YOUR_DATABASE_NAME> --collection <YOUR_COLLECTION_NAME> --file data/config.json 
+    $ mongoimport --host <YOUR_MONGODB_HOST> --port <YOUR_MONGODB_PORT> --db <YOUR_DATABASE_NAME> --collection <YOUR_COLLECTION_NAME> --file data/config.json 
     ```
     (Read more about [importing data in MongoDB](https://docs.mongodb.com/manual/reference/program/mongoimport "MongoDB Help")).
 2. Install required libraries using pip:
