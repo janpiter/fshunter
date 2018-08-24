@@ -1,7 +1,7 @@
 ##### Please be aware that automated crawling of these websites violates their Terms of Service. This is for educational purposes only!
 
 # Flash Sale Hunter
-Flash Sale Crawler for Indonesia Marketplace.
+Flash Sale Crawler for Indonesia Online Marketplace.
 
 ## Installation
 1. Import `config.json` file under **data** directory into MongoDB:
